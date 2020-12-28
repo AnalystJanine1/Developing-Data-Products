@@ -1,0 +1,63 @@
+---
+title: "Developing Data Product Assignment(Press next arrow)"
+author: "Janine Djeundje"
+date: "28/12/2020"
+output: ioslides_presentation
+---
+
+## Assignment on R Markdown Presentation & Plotly 
+
+In this assignment, we are asked to create a web page presentation using R Markdown that features a plot created with plotly.
+The map in the next slide shows the average unemployment rate by state in US in the year 2015. This map was created using the acs2015_census_tract_data.csv dataset from the US Census Demographic Data.
+
+**Press the next arrow to move to the next slide.**
+
+***
+
+
+```{r echo=FALSE, message=FALSE}
+library(plotly)
+library(dplyr)
+library(readr)
+states_dat<-read.csv("C:/Users/Lenovo/Documents/coursera/Data Product/states.csv")
+unemployment_dat<-read.csv("C:/Users/Lenovo/Documents/coursera/Data Product/acs2015_census_tract_data.csv")%>%
+  inner_join(states_dat,by.x=State, by.y= state)%>%
+  select(Abbreviation,Unemployment)
+unemployment_dat1 <- unemployment_dat %>%
+  group_by(Abbreviation) %>%
+  summarise(Average_umemployment_rate = mean(Unemployment, na.rm = TRUE))
+unemployment_dat1$hover <- with(unemployment_dat1, paste(unemployment_dat1$Abbreviation, '<br>', "Unemployment rate:", round(unemployment_dat1$Average_umemployment_rate, 2)))
+
+l <- list(color = toRGB("white"), width = 2)
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+fontStyle = list(
+  family="DM Sans",
+  size = 15,
+  color="white"
+)
+
+label = list(
+  bycolor = "#EEEEEE",
+  borderclor ="transparent",
+  font = fontStyle
+)
+
+fig <- plot_geo(unemployment_dat1, locationmode = 'USA-states')
+fig <- fig %>% add_trace(
+  z = ~unemployment_dat1$Average_umemployment_rate, text = ~hover, hoverinfo= 'text',locations = ~unemployment_dat1$Abbreviation,
+  color = ~unemployment_dat1$Average_umemployment_rate, colors = 'Purples'
+)
+fig <- fig %>% colorbar(title = "Umemployment rate")
+fig <- fig %>% layout(
+  title = '2015 US Unemployment rate by State',
+  font = list(family="DM Sans"),
+  geo = g
+) %>% style(hoverlabel= label)
+fig
+```
